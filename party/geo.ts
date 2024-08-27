@@ -20,7 +20,7 @@ export default class MyRemix implements Party.Server {
   // This has tradeoffs for the developer, like needing to hydrate/rehydrate
   // state on start, so be careful!
   static options = {
-    hibernate: true,
+    hibernate: false,
   };
 
   // This is called every time a new room is made

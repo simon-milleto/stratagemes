@@ -133,3 +133,6 @@ public/build
 build 
 .partykit 
 .DS_Store
+## Panda
+styled-system
+styled-system-studio
