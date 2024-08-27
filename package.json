@@ -13,6 +13,7 @@
     "deploy": "npm run build && partykit deploy --define DEVMODE=false --serve ./build/client"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.1.0",
     "@radix-ui/react-popover": "^1.1.1",
     "@radix-ui/react-slider": "^1.2.0",
     "@radix-ui/react-toast": "^1.2.1",

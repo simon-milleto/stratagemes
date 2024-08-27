@@ -7,16 +7,19 @@ import type { GameState, MessageFromClient } from "../messages";
 
 import type * as Party from "partykit/server";
 import { Player } from "~/game/Player";
-import { GAME_STATUS } from "~/game/constants";
+import { GAME_STATUS, PLAYER_ROUND_STATUS, PLAYER_STATUS } from "~/game/constants";
 
 type ConnectionState = {
     username: string;
     userId: string;
 }
 
+const DEBUG = false;
+
 export default class MyRemix implements Party.Server {
     state: GameState;
     board: Board;
+    timeoutRefs: Record<string, ReturnType<typeof setTimeout>> = {};
 
     // eslint-disable-next-line no-useless-constructor
     constructor(public room: Party.Room) {
@@ -72,35 +75,43 @@ export default class MyRemix implements Party.Server {
         const data = JSON.parse(message.toString()) as MessageFromClient;
         const userId = sender.state!.userId;
 
-        console.log('server onMessage', data, userId);
+        const player = this.board.getPlayerById(userId);
+        if (!player) return;
+
         switch (data.type) {
             case "start":
-                const player = this.board.getPlayerById(userId);
                 if (player && player.isAdmin) {
                     this.board.startGame();
+                    player.roundStatus = PLAYER_ROUND_STATUS.PLAYING;
+
+                    this.state = this.board.getGameState();
+                    this.room.broadcast(JSON.stringify(this.state));
+                }
+                break;
+            case "move":
+                if (player) {
+                    player.makeMove(data.row, data.col, data.gem);
+
+                    this.state = this.board.getGameState();
+                    this.room.broadcast(JSON.stringify(this.state));
+                }
+                break;
+            case "exchange":
+                if (player) {
+                    const nextPlayer = this.board.getNextPlayer();
+                    if (nextPlayer) {
+                        nextPlayer.roundStatus = PLAYER_ROUND_STATUS.PLAYING;
+                    }                    
+                    
+                    player.makeExchange(data.gems);
+
+                    this.board.round++;
 
                     this.state = this.board.getGameState();
                     this.room.broadcast(JSON.stringify(this.state));
                 }
                 break;
         }
-    }
-
-
-    // This is called every time a new room is made
-    // since we're using hibernation mode, we should
-    // "rehydrate" this.state here from all connections
-    onStart(): void | Promise<void> {
-        // for (const connection of this.room.getConnections<{ from: string }>()) {
-        //     const from = connection.state!.from;
-        //     this.state = {
-        //         total: this.state.total + 1,
-        //         from: {
-        //             ...this.state.from,
-        //             [from]: (this.state.from[from] ?? 0) + 1,
-        //         },
-        //     };
-        // }
     }
 
     // This is called every time a new connection is made
@@ -111,13 +122,29 @@ export default class MyRemix implements Party.Server {
         const username = ctx.request.headers.get("X-Username") || "New wizard";
         const userId = ctx.request.headers.get("X-User-ID") || "";
         
-        const newPlayer = new Player(username, userId);
+        const existingPlayer = this.board.getPlayerById(userId);
+        const player = this.board.getPlayerById(userId) || new Player(username, userId);
+
+        player.status = PLAYER_STATUS.CONNECTED;
+
+        clearTimeout(this.timeoutRefs[userId]);
+
         if (this.board.players.length === 0) {
-            newPlayer.isAdmin = true;
+            player.isAdmin = true;
             this.board.status = GAME_STATUS.LOBBY;
         }
 
-        this.board.addPlayer(newPlayer);
+        if (!existingPlayer) {
+            this.board.addPlayer(player);
+
+        }
+
+        if (DEBUG && this.board.players.length < 2) {
+            this.board.addPlayer(new Player("New wizard", "fake-player"));
+            player.roundStatus = PLAYER_ROUND_STATUS.PLAYING;
+
+            this.board.startGame();
+        }
 
         this.state = this.board.getGameState();
 
@@ -134,15 +161,35 @@ export default class MyRemix implements Party.Server {
     async onClose(connection: Party.Connection<ConnectionState>): Promise<void> {
         const userId = connection.state!.userId;
 
-        this.board.removePlayerById(userId);
-
-        if (this.board.players.length === 0) {
-            this.board.status = GAME_STATUS.STOPPED;
+        const player = this.board.getPlayerById(userId);
+        if (player) {
+            player.status = PLAYER_STATUS.DISCONNECTED;
         }
 
         this.state = this.board.getGameState();
 
+        
+        if (DEBUG) {
+            this.board.removePlayerById(userId);
+            this.board.removePlayerById("fake-player");
+        }
+
         this.room.broadcast(JSON.stringify(this.state));
+
+        // Remove player after 20s of inactivity
+        this.timeoutRefs[userId] = setTimeout(() => {
+            this.board.removePlayerById(userId);
+
+            if (this.board.players.length === 0) {
+                this.board.status = GAME_STATUS.STOPPED;
+            } else if (this.board.players.length === 1) {
+                this.board.status = GAME_STATUS.LOBBY;
+            }
+
+            this.state = this.board.getGameState();
+
+            this.room.broadcast(JSON.stringify(this.state));
+        }, 20_000);
     }
 
     // This is called when a connection has an error

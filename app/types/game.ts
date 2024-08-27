@@ -1,16 +1,19 @@
-import type { CellColorType, GameStatus, RoundStatus } from "~/game/constants"
+import type { CellColorType, GameStatus, PlayerRoundStatus, PlayerStatus } from "~/game/constants"
 
-export type Stone = {
+export type Gem = {
     color: CellColorType
+    id: string
 }
 
 export type Player = {
     id: string
     username: string
-    stoneWons: Stone[]
-    handStones: Stone[]
+    gemWons: Gem[]
+    handGems: Gem[]
     secretColor: CellColorType | null
     isAdmin: boolean
+    status: PlayerStatus
+    roundStatus: PlayerRoundStatus
 }
 
 export type Cell = {
@@ -25,7 +28,6 @@ export type Board = {
     cells: Cell[][]
     size: number
     status: GameStatus
-    roundStatus: RoundStatus
     players: Player[]
-    currentPlayer: Player | null
+    playerToPlay: Player | null
 }

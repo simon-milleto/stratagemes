@@ -1,13 +1,21 @@
 import { useState } from 'react';
-import { json, useLoaderData, useNavigate, useParams } from "@remix-run/react";
+import { json, useNavigate, useParams } from "@remix-run/react";
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
+
 import { usePartySocket } from "partysocket/react";
 import { useSocketConfig } from "~/context/SocketContext";
 import type { LoaderFunctionArgs } from 'partymix';
 import { getSession, commitSession } from '~/services/sessions';
 import type { GameState } from 'messages';
 import StratagemBoard from '~/components/StratagemBoard';
-import { GAME_STATUS, type CellColorType } from '~/game/constants';
-import { v4 as uuidv4 } from 'uuid';
+import { GAME_STATUS, PLAYER_ROUND_STATUS, type CellColorType } from '~/game/constants';
+import { TextHeading } from '~/components/TextHeading';
+import { styled } from 'styled-system/jsx';
+import { useUser } from '~/context/UserContext';
+import PlayerHand from '~/components/PlayerHand';
+import { Cell, Gem } from '~/types/game';
+import { useToast } from '~/hooks/useToast';
+import GameResume from '~/components/GameResume';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const session = await getSession(
@@ -18,29 +26,41 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         session.set("lastRoomId", params.room);
     }
 
-    if (!session.has("userId")) {
-        session.set("userId", uuidv4());
-    }
-
-    return json({
-        username: session.get("username") || "New wizard",
-        userId: session.get("userId"),
-    }, {
+    return json({}, {
         headers: {
             "Set-Cookie": await commitSession(session),
         },
     });
 }
 
+const HeadingTitle = styled(TextHeading, {
+    base: {
+        fontSize: '6xl',
+    }
+});
+
+const Section = styled('section', {
+    base: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '1rem',
+        padding: '1rem',
+        alignSelf: 'flex-start',
+    }
+});
+
 export default function GameRoom() {
-    const { username, userId } = useLoaderData<typeof loader>();
+    const { username, userId } = useUser();
     const { room } = useParams<{ room: string }>();
     const [gameState, setGameState] = useState<GameState | null>(null);
 
     const { host } = useSocketConfig();
     const navigate = useNavigate();
+    const toast = useToast();
 
-    usePartySocket({
+    const partySocket = usePartySocket({
         host,
         party: "game",
         room,
@@ -52,28 +72,65 @@ export default function GameRoom() {
             if (data.status === GAME_STATUS.LOBBY) {
                 navigate(`/room/${data.id}/lobby`);
             }
+
+            const currentPlayerPreviousState = gameState?.players.find(player => player.id === userId);
+            const currentPlayer = gameState?.players.find(player => player.id === userId);
+
+            if (currentPlayerPreviousState?.roundStatus === PLAYER_ROUND_STATUS.WAITING
+                && currentPlayer?.roundStatus === PLAYER_ROUND_STATUS.PLAYING
+            ) {
+                toast({
+                    title: "À votre tour !",
+                    subtitle: "Placez une gème sur le plateau",
+                })
+            }
         },
     });
 
-    const onCellClick = (row: number, col: number, color: CellColorType) => {
-        console.log(row, col, color);
-    }
-
     if (!gameState) return <div>Loading...</div>;
 
-    console.log(gameState);
+    const currentPlayer = gameState.players.find(player => player.id === userId);
+
+    if (!currentPlayer) return <div>Loading...</div>;
+
+    const handleExchange = (gems: Gem[]) => {
+        partySocket.send(JSON.stringify({
+            type: 'exchange',
+            userId: userId,
+            gems
+        }));
+    }
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        if (event.over && event.over.id.toString().startsWith('cell-')) {
+            const cell = event.over.data.current as Cell;
+            const gem = event.active.data.current as Gem;
+
+            if (cell.isEnabled) {
+                partySocket.send(JSON.stringify({
+                    type: 'move',
+                    userId: userId,
+                    row: cell.row,
+                    col: cell.col,
+                    gem: gem
+                }));
+            }
+        }
+    }
 
     return (
-        <div>
-            <h1>Game Room: {room}</h1>
-            <h2>Username: {username}</h2>
-            <ul>
-                <li>Nombre de joueurs: {gameState.players.length}</li>
-                <li>Statut du jeu: {gameState.status}</li>
-            </ul>
-            {/* Render your game board here using gameState */}
-            <StratagemBoard board={gameState} onCellClick={onCellClick} />
-            {/* Add buttons or UI elements to call makeMove */}
-        </div>
+        <Section>
+            <HeadingTitle>
+                Stratagèmes
+            </HeadingTitle>
+            <DndContext onDragEnd={handleDragEnd}>
+                <StratagemBoard
+                    board={gameState} />
+                <PlayerHand
+                    onExchange={handleExchange}
+                    currentPlayer={currentPlayer} />
+            </DndContext>
+            <GameResume gameState={gameState} />
+        </Section>
     );
 }

@@ -58,12 +58,33 @@ export default defineConfig({
           'main': {
             value: '#F1D272'
           },
+          'main.light': {
+            value: '#FFF4C2'
+          },
 
           'dark': {
             value: '#261921'
           },
           'dark.secondary': {
             value: '#3D2F37'
+          },
+          'gem.red': {
+            value: '#b34c4e'
+          },
+          'gem.blue': {
+            value: '#3a64a0'
+          },
+          'gem.green': {
+            value: '#789e76'
+          },
+          'gem.yellow': {
+            value: '#dcc950'
+          },
+          'gem.white': {
+            value: '#b4b5b3'
+          },
+          'gem.black': {
+            value: '#383937'
           },
         }
       }

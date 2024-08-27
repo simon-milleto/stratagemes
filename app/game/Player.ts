@@ -1,14 +1,16 @@
 import { Board } from './Board';
-import { Stone } from './Stone';
-import type { Player as PlayerJson } from "~/types/game";
-import type { CellColorType } from "~/game/constants";
-import {CELL_COLOR} from "~/game/constants";
+import { Gem } from './Gem';
+import type { Player as PlayerJson, Gem as GemJson } from "~/types/game";
+import type { CellColorType, PlayerStatus, PlayerRoundStatus } from "~/game/constants";
+import {CELL_COLOR, PLAYER_STATUS, PLAYER_ROUND_STATUS} from "~/game/constants";
 
 export class Player {
     private _board!: Board;
-    stoneWons: Stone[] = [];
-    handStones: Stone[] = [];
+    gemWons: Gem[] = [];
+    handGems: Gem[] = [];
     secretColor: CellColorType | null = null;
+    status: PlayerStatus = PLAYER_STATUS.WAITING;
+    roundStatus: PlayerRoundStatus = PLAYER_ROUND_STATUS.WAITING;
     hasWon = false;
     isAdmin = false;
 
@@ -21,9 +23,9 @@ export class Player {
     set board(board: Board) {
         this._board = board;
 
-        this.handStones = Array.from({
+        this.handGems = Array.from({
             length: Math.max(3, this.board.players.length)
-        }, () => Stone.fromRandomColor(this.board.availableColors));
+        }, () => Gem.fromRandomColor(this.board.availableColors));
     }
 
     get board() {
@@ -34,35 +36,28 @@ export class Player {
         return this.id;
     }
 
-    hasRedStone(): boolean {
-        return this.handStones.some(stone => stone.getColor() === CELL_COLOR.RED);
+    makeExchange(gems: GemJson[]) {
+        console.log('player ' + this.username + ' exchanges ' + gems.length + ' gems');
+        // Pick new gems of exchange
+        for (const gem of gems) {
+            this.handGems = this.handGems.filter(handGem => handGem.id !== gem.id);
+            this.handGems.push(Gem.fromRandomColor(this.board.availableColors));
+        }
+
+        // Pick new gem of move
+        while (this.handGems.length < this.board.availableColors.length) {
+            console.log('player ' + this.username + ' has ' + this.handGems.length + ' gems. ADD ONE');
+            this.handGems.push(Gem.fromRandomColor(this.board.availableColors));
+        }
+
+        this.roundStatus = PLAYER_ROUND_STATUS.WAITING;
     }
 
-    hasBlueStone(): boolean {
-        return this.handStones.some(stone => stone.getColor() === CELL_COLOR.BLUE);
-    }
-
-    hasGreenStone(): boolean {
-        return this.handStones.some(stone => stone.getColor() === CELL_COLOR.GREEN);
-    }
-
-    hasYellowStone(): boolean {
-        return this.handStones.some(stone => stone.getColor() === CELL_COLOR.YELLOW);
-    }
-
-    hasBlackStone(): boolean {
-        return this.handStones.some(stone => stone.getColor() === CELL_COLOR.BLACK);
-    }
-
-    hasWhiteStone(): boolean {
-        return this.handStones.some(stone => stone.getColor() === CELL_COLOR.WHITE);
-    }
-
-    getusername(): string {
+    getUsername(): string {
         return this.username;
     }
 
-    makeMove(row: number, col: number, color: CellColorType): boolean {
+    makeMove(row: number, col: number, gem: GemJson): boolean {
         const surroundingColors = this.board.getSurroundingColors(row, col);
 
         if (this.board.round === 0) {
@@ -75,18 +70,17 @@ export class Player {
           return false;
         }
 
-        this.board.getCell(row, col)?.setColor(color);
+        this.board.getCell(row, col)?.setColor(gem.color);
 
-        this.handStones
-            .find(stone => stone.getColor() === color)!
-            .setRandomColor(this.board.availableColors);
+        // Remove the played gem
+        this.handGems = this.handGems.filter(handGem => handGem.id !== gem.id);
 
-        this.board.round++;
-
-        const capturedStones = this.board.captureCells(row, col, color);
-        this.stoneWons.push(...capturedStones);
+        const capturedGems = this.board.captureCells(row, col, gem.color);
+        this.gemWons.push(...capturedGems);
 
         this.hasWon = this.checkWinCondition();
+
+        this.roundStatus = PLAYER_ROUND_STATUS.DRAW_GEMS;
 
         return this.hasWon;
     }
@@ -96,14 +90,14 @@ export class Player {
             return true;
         }
 
-        // If 5 stone of the same color are captured, the player wins
-        const countStones: Record<string, number> = {};
-        for (const stone of this.stoneWons) {
-            countStones[stone.getColor()] = (countStones[stone.getColor()] || 0) + 1;
+        // If 5 gem of the same color are captured, the player wins
+        const countGems: Record<string, number> = {};
+        for (const gem of this.gemWons) {
+            countGems[gem.getColor()] = (countGems[gem.getColor()] || 0) + 1;
         }
 
-        for (const color in countStones) {
-            if (countStones[color] >= 5) {
+        for (const color in countGems) {
+            if (countGems[color] >= 5) {
                 return true;
             }
         }
@@ -112,18 +106,20 @@ export class Player {
         return false;
     }
 
-    printCurrentStones(): void {
-        console.log('Player ' + this.username + ' has ' + this.stoneWons.length + ' stones');
+    printCurrentGems(): void {
+        console.log('Player ' + this.username + ' has ' + this.gemWons.length + ' gems');
     }
 
     toJson(): PlayerJson {
         return {
             id: this.id,
             username: this.username,
-            stoneWons: this.stoneWons.map((stone) => stone.toJson()),
-            handStones: this.handStones.map((stone) => stone.toJson()),
+            gemWons: this.gemWons.map((gem) => gem.toJson()),
+            handGems: this.handGems.map((gem) => gem.toJson()),
             secretColor: this.secretColor,
-            isAdmin: this.isAdmin, 
+            isAdmin: this.isAdmin,
+            roundStatus: this.roundStatus,
+            status: this.status,
         }
     }
 }

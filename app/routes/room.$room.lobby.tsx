@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, json, useLoaderData, useNavigate, useParams } from "@remix-run/react";
+import { Link, json, useNavigate, useParams } from "@remix-run/react";
 import { usePartySocket } from "partysocket/react";
 import { useSocketConfig } from "~/context/SocketContext";
 import type { LoaderFunctionArgs } from 'partymix';
@@ -10,13 +10,13 @@ import * as Slider from '@radix-ui/react-slider';
 import { getSession, commitSession } from '~/services/sessions';
 import type { GameState } from 'messages';
 import {  GAME_STATUS } from '~/game/constants';
-import { v4 as uuidv4 } from 'uuid';
 import { styled } from 'styled-system/jsx';
 import { css } from 'styled-system/css';
 import { TextHeading } from '~/components/TextHeading';
 import { useToast } from '~/hooks/useToast';
 import { Button } from '~/components/Button';
 import { useDialog } from '~/hooks/useDialog';
+import { useUser } from '~/context/UserContext';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const session = await getSession(
@@ -27,14 +27,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         session.set("lastRoomId", params.room);
     }
 
-    if (!session.has("userId")) {
-        session.set("userId", uuidv4());
-    }
-
-    return json({
-        username: session.get("username") || "New wizard",
-        userId: session.get("userId"),
-    }, {
+    return json({}, {
         headers: {
             "Set-Cookie": await commitSession(session),
         },
@@ -61,8 +54,11 @@ const HomeLink = styled(Link, {
         left: '2rem',
         fontSize: '1.5rem',
         color: 'main',
+        transition: 'all 0.3s ease-in-out',
+
         '&:hover': {
             color: 'main/80',
+            transform: 'scale(1.1)',
         },
     }
 });
@@ -208,7 +204,8 @@ const PlayerItem = styled('li', {
 });
 
 export default function GameLobby() {
-    const { username, userId } = useLoaderData<typeof loader>();
+    const { username, userId } = useUser();
+
     const navigate = useNavigate();
     const toast = useToast();
     const dialog = useDialog();
@@ -253,7 +250,7 @@ export default function GameLobby() {
         });
     }
 
-    const canStartGame = (currentPlayer && !currentPlayer.isAdmin) && gameState.players.length > 1;
+    const canStartGame = (currentPlayer && currentPlayer.isAdmin) && gameState.players.length > 1;
 
     return (<Section>
         <HomeLink to="/" aria-label='Accueil'>
@@ -306,7 +303,7 @@ export default function GameLobby() {
             <ListPlayers>
                 {gameState.players.map((player) => (
                     <PlayerItem key={player.id}>
-                        {player.username} {player.isAdmin ? '(admin)' : ''}
+                        {player === currentPlayer ? 'Vous' : player.username} {player.isAdmin ? '(admin)' : ''}
                     </PlayerItem>
                 ))}
             </ListPlayers>

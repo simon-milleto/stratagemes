@@ -11,11 +11,19 @@ export const DEFAULT_SETTINGS = {
     WITH_PROFESSOR: true,
 } as const
 
-export const ROUND_STATUS = {
-    PLAYER_DRAW_GEMS: "playerDrawGems",
+export const PLAYER_ROUND_STATUS = {
+    WAITING: "waiting",
+    DRAW_GEMS: "drawGems",
     PLAYING: "playing",
 } as const
-export type RoundStatus = (typeof ROUND_STATUS)[keyof typeof ROUND_STATUS]
+export type PlayerRoundStatus = (typeof PLAYER_ROUND_STATUS)[keyof typeof PLAYER_ROUND_STATUS]
+
+export const PLAYER_STATUS = {
+    CONNECTED: "connected",
+    WAITING: "waiting",
+    DISCONNECTED: "disconnected",
+} as const
+export type PlayerStatus = (typeof PLAYER_STATUS)[keyof typeof PLAYER_STATUS]
 
 export const MESSAGE_TYPE = {
     PLAYER_JOINED: "player-joined",
@@ -34,7 +42,7 @@ export const CELL_COLOR = {
     YELLOW: 'yellow',
     WHITE: 'white',
     BLACK: 'black'
-}
+} as const;
 export type CellColorType = (typeof CELL_COLOR)[keyof typeof CELL_COLOR]
 
 export const DIRECTIONS = {

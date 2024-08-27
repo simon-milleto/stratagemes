@@ -18,6 +18,7 @@ import { Theme } from "@radix-ui/themes";
 import { css } from "styled-system/css";
 import Toaster from "~/components/Toast";
 import Dialog from "~/components/Dialog";
+import { UserContext } from "./context/UserContext";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: styles },
@@ -42,11 +43,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     request.headers.get("Cookie")
   );
 
+  const userId = session.get("userId") || uuidv4();
+  const username = session.get("username") || "New wizard";
   if (!session.has("userId")) {
-    session.set("userId", uuidv4());
+    session.set("userId", userId);
   }
 
   return json({
+    userId,
+    username,
     host,
   }, {
     headers: {
@@ -56,7 +61,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function App() {
-  const { host } = useLoaderData<typeof loader>();
+  const { host, userId, username } = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -77,11 +82,13 @@ export default function App() {
             justifyContent: 'center',
             alignItems: 'center'
           })}>
-            <SocketConfigContext.Provider value={{ host }}>
-              <Outlet />
-              <Toaster />
-              <Dialog />
-            </SocketConfigContext.Provider>
+            <UserContext.Provider value={{ userId, username }}>
+              <SocketConfigContext.Provider value={{ host }}>
+                <Outlet />
+                <Toaster />
+                <Dialog />
+              </SocketConfigContext.Provider>
+            </UserContext.Provider>
           </main>
         </Theme>
         <ScrollRestoration />

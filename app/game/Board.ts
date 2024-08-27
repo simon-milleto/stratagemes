@@ -1,20 +1,18 @@
-import type { GameStatus, RoundStatus, CellColorType } from '~/game/constants';
+import type { GameStatus, CellColorType } from '~/game/constants';
 import type { Cell as CellJson } from "~/types/game";
-import { DIRECTIONS, GAME_STATUS, ROUND_STATUS, CELL_COLOR } from '~/game/constants';
+import { DIRECTIONS, GAME_STATUS, CELL_COLOR, PLAYER_ROUND_STATUS } from '~/game/constants';
 import { Cell } from './Cell';
 import type { Player } from './Player';
-import { Stone } from './Stone';
+import { Gem } from './Gem';
 
 export class Board {
     private cells: Cell[][] = [];
     public size = 0;
     public round = 0;
     public id: string;
-    public roundStatus: RoundStatus = ROUND_STATUS.PLAYING;
     public availableColors: CellColorType[] = [CELL_COLOR.RED, CELL_COLOR.BLUE, CELL_COLOR.GREEN];
     public availablePlayerColors: CellColorType[] = [];
     public players: Player[] = [];
-    public currentPlayer: Player | null = null;
     public status: GameStatus = GAME_STATUS.LOBBY;
 
     constructor(id: string) {
@@ -77,6 +75,22 @@ export class Board {
         return this.players.find(player => player.getId() === id);
     }
 
+    getNextPlayer(): Player | null {
+        const currentPlayerIndex = this.players.findIndex(player => player.roundStatus !== PLAYER_ROUND_STATUS.WAITING);
+        
+        if (currentPlayerIndex === -1) return null;
+
+        return this.players[(currentPlayerIndex + 1) % this.players.length];
+    }
+
+    getCurrentPlayer(): Player | null {
+        const currentPlayerIndex = this.players.findIndex(player => player.roundStatus !== PLAYER_ROUND_STATUS.WAITING);
+
+        if (currentPlayerIndex === -1) return null;
+
+        return this.players[currentPlayerIndex];
+    }
+
     getCenter(): Cell | null {
         return this.cells[Math.floor(this.size / 2)][Math.floor(this.size / 2)];
     }
@@ -124,26 +138,26 @@ export class Board {
         }).filter(color => color !== undefined) as CellColorType[];
     }
 
-    captureCells(row: number, col: number, playerColor: CellColorType): Stone[] {
+    captureCells(row: number, col: number, playerColor: CellColorType): Gem[] {
         const directions = [
             [-1, -1], [-1, 0], [-1, 1],
             [0, -1], [0, 1],
             [1, -1], [1, 0], [1, 1]
         ];
 
-        const capturedStone: Stone[] = [];
+        const capturedGem: Gem[] = [];
         for (const [dx, dy] of directions) {
-            capturedStone.push(...this.checkCapture(row, col, dx, dy, playerColor));
+            capturedGem.push(...this.checkCapture(row, col, dx, dy, playerColor));
         }
 
-        return capturedStone;
+        return capturedGem;
     }
 
-    checkCapture(row: number, col: number, dx: number, dy: number, playerColor: CellColorType): Stone[] {
+    checkCapture(row: number, col: number, dx: number, dy: number, playerColor: CellColorType): Gem[] {
         let x = row + dx;
         let y = col + dy;
         const capturedCells: [number, number][] = [];
-        const stoneWons: Stone[] = [];
+        const gemWons: Gem[] = [];
 
         while (true) {
             const cell = this.getCell(x, y);
@@ -154,7 +168,7 @@ export class Board {
             if (cell.getColor() === playerColor) {
                 // Capture all cells between
                 for (const [cx, cy] of capturedCells) {
-                    stoneWons.push(new Stone(this.getCell(cx, cy)!.getColor()));
+                    gemWons.push(new Gem(this.getCell(cx, cy)!.getColor()));
 
                     this.getCell(cx, cy)!.setColor(CELL_COLOR.EMPTY);
                 }
@@ -166,7 +180,7 @@ export class Board {
             y += dy;
         }
 
-        return stoneWons;
+        return gemWons;
     }
 
     checkWinCondition(): boolean {
@@ -203,18 +217,6 @@ export class Board {
       return true;
     }
 
-    printBoard(): void {
-        console.log('---------------');
-        for (let i = 0; i < this.size; i++) {
-            let row = '';
-            for (let j = 0; j < this.size; j++) {
-                row += this.cells[i][j].getColor().charAt(0).toUpperCase() + ' ';
-            }
-            console.log(row);
-        }
-        console.log('---------------');
-    }
-
     getGameState() {
         return {
             id: this.id,
@@ -222,8 +224,7 @@ export class Board {
             players: this.players.map((player) => player.toJson()),
             size: this.size,
             status: this.status,
-            roundStatus: this.roundStatus,
-            currentPlayer: this.currentPlayer?.toJson() || null,
+            playerToPlay: this.getCurrentPlayer()?.toJson() || null,
         }
     }
 }
