@@ -13,6 +13,7 @@ export class Board {
     public availableColors: CellColorType[] = [CELL_COLOR.RED, CELL_COLOR.BLUE, CELL_COLOR.GREEN];
     public availablePlayerColors: CellColorType[] = [];
     public players: Player[] = [];
+    public winner: Player | null = null;
     public status: GameStatus = GAME_STATUS.LOBBY;
 
     constructor(id: string) {
@@ -89,6 +90,14 @@ export class Board {
         if (currentPlayerIndex === -1) return null;
 
         return this.players[currentPlayerIndex];
+    }
+
+    ensureAdminIsSet() {
+        const adminPlayer = this.players.find(player => player.isAdmin);
+        const firstPlayer = this.players[0];
+        if (!adminPlayer && firstPlayer) {
+            firstPlayer.isAdmin = true;
+        }
     }
 
     getCenter(): Cell | null {
@@ -225,6 +234,7 @@ export class Board {
             size: this.size,
             status: this.status,
             playerToPlay: this.getCurrentPlayer()?.toJson() || null,
+            winner: this.winner?.toJson() || null,
         }
     }
 }

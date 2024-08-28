@@ -9,12 +9,13 @@ import * as Slider from '@radix-ui/react-slider';
 
 import { getSession, commitSession } from '~/services/sessions';
 import type { GameState } from 'messages';
-import {  GAME_STATUS } from '~/game/constants';
+import {  GAME_STATUS, PLAYER_CONNEXION_STATUS } from '~/game/constants';
 import { styled } from 'styled-system/jsx';
 import { css } from 'styled-system/css';
 import { TextHeading } from '~/components/TextHeading';
 import { useToast } from '~/hooks/useToast';
 import { Button } from '~/components/Button';
+import { WithTooltip } from '~/components/WithTooltip';
 import { useDialog } from '~/hooks/useDialog';
 import { useUser } from '~/context/UserContext';
 
@@ -162,7 +163,8 @@ const Thumb = styled(Slider.Thumb,  {
         },
         '&:focus': {
             outline: 'none',
-            boxShadow: '0 0 0 5px black',
+            boxShadow: '0 0 0 5px var(--shadow-color)',
+            boxShadowColor: 'main/50',
         },
     }
 });
@@ -200,6 +202,31 @@ const PlayerItem = styled('li', {
     base: {
         marginBottom: '0.5rem',
         fontWeight: 'bold',
+        display: 'flex',
+        alignItems: 'center'
+    }
+});
+
+const OnlineStatus = styled('span', {
+    base: {
+        w: '2',
+        h: '2',
+        borderRadius: '100%',
+        marginRight: '0.5rem',
+        display: 'inline-block',
+    },
+    variants: {
+        status: {
+            connected: {
+                bg: 'emerald.500',
+            },
+            waiting: {
+                bg: 'amber.500',
+            },
+            disconnected: {
+                bg: 'red.500',
+            }
+        }
     }
 });
 
@@ -303,6 +330,12 @@ export default function GameLobby() {
             <ListPlayers>
                 {gameState.players.map((player) => (
                     <PlayerItem key={player.id}>
+                        {player.connexionStatus !== PLAYER_CONNEXION_STATUS.CONNECTED && (
+                            <WithTooltip tooltip={player.connexionStatus}>
+                                <OnlineStatus
+                                    status={player.connexionStatus}/>
+                            </WithTooltip>
+                        )}
                         {player === currentPlayer ? 'Vous' : player.username} {player.isAdmin ? '(admin)' : ''}
                     </PlayerItem>
                 ))}

@@ -1,17 +1,17 @@
 import { Board } from './Board';
 import { Gem } from './Gem';
 import type { Player as PlayerJson, Gem as GemJson } from "~/types/game";
-import type { CellColorType, PlayerStatus, PlayerRoundStatus } from "~/game/constants";
-import {CELL_COLOR, PLAYER_STATUS, PLAYER_ROUND_STATUS} from "~/game/constants";
+import type { CellColorType, PlayerGameStatus, PlayerRoundStatus, PlayerConnexionStatus } from "~/game/constants";
+import { CELL_COLOR, PLAYER_GAME_STATUS, PLAYER_CONNEXION_STATUS, PLAYER_ROUND_STATUS} from "~/game/constants";
 
 export class Player {
     private _board!: Board;
     gemWons: Gem[] = [];
     handGems: Gem[] = [];
     secretColor: CellColorType | null = null;
-    status: PlayerStatus = PLAYER_STATUS.WAITING;
+    gameStatus: PlayerGameStatus = PLAYER_GAME_STATUS.IN_LOBBY;
+    connexionStatus: PlayerConnexionStatus = PLAYER_CONNEXION_STATUS.WAITING;
     roundStatus: PlayerRoundStatus = PLAYER_ROUND_STATUS.WAITING;
-    hasWon = false;
     isAdmin = false;
 
     constructor(
@@ -78,11 +78,15 @@ export class Player {
         const capturedGems = this.board.captureCells(row, col, gem.color);
         this.gemWons.push(...capturedGems);
 
-        this.hasWon = this.checkWinCondition();
+        const hasWon = this.checkWinCondition();
+
+        if (hasWon) {
+            this.board.winner = this;
+        }
 
         this.roundStatus = PLAYER_ROUND_STATUS.DRAW_GEMS;
 
-        return this.hasWon;
+        return hasWon;
     }
 
     checkWinCondition(): boolean {
@@ -118,8 +122,9 @@ export class Player {
             handGems: this.handGems.map((gem) => gem.toJson()),
             secretColor: this.secretColor,
             isAdmin: this.isAdmin,
-            roundStatus: this.roundStatus,
-            status: this.status,
+            gameStatus: this.gameStatus,
+            connexionStatus: this.connexionStatus,
+            roundStatus: this.roundStatus
         }
     }
 }

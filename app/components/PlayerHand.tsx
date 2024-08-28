@@ -6,6 +6,7 @@ import type { Player, Gem as GemType} from "~/types/game";
 import { PLAYER_ROUND_STATUS } from "~/game/constants";
 import { useState } from "react";
 import { Button } from "./Button";
+import GemIcon from "./GemIcon";
 
 const PanelTitle = styled('span', {
     base: {
@@ -42,6 +43,7 @@ const Gem = styled('div', {
     base: {
         display: 'flex',
         fontSize: '1.6em',
+        touchAction: 'none'
     },
     variants: {
         disabled: {
@@ -181,7 +183,7 @@ const PlayerHand = ({ currentPlayer, onExchange }: { currentPlayer: Player | nul
     return (
         <Container>
             <PanelTitle>
-                Votre main
+                Votre main {currentPlayer.username}
             </PanelTitle>
             <GemContainer>
             {currentPlayer
@@ -195,7 +197,7 @@ const PlayerHand = ({ currentPlayer, onExchange }: { currentPlayer: Player | nul
             </GemContainer>
             {currentPlayer.roundStatus === PLAYER_ROUND_STATUS.DRAW_GEMS && (<>
                 <DrawLabel>
-                    Sélectionnez les gèmes que vous souhaitez échanger
+                    Sélectionnez les gèmes que vous souhaitez échanger ou passer
                 </DrawLabel>
                 <GemContainer>
                     {currentPlayer.handGems.map((gem) => (
@@ -209,9 +211,16 @@ const PlayerHand = ({ currentPlayer, onExchange }: { currentPlayer: Player | nul
                     ))}
                 </GemContainer>
                 <Button onClick={handleExchange}>
-                    Échanger
+                    {selectedGems.length ? "Échanger" : "Passer"}
                 </Button>
             </>)}
+
+            <PanelTitle>
+                Votre gème secrète
+            </PanelTitle>
+            {currentPlayer.secretColor ? (
+                <GemIcon color={currentPlayer.secretColor} />
+            ) : null}
         </Container>
     )
 }

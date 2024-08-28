@@ -1,6 +1,7 @@
 export const GAME_STATUS = {
     LOBBY: "lobby",
     PLAYING: "playing",
+    WAITING_PLAYERS: "waiting-players",
     FINISHED: "finished",
     STOPPED: "stopped",
 } as const
@@ -18,12 +19,18 @@ export const PLAYER_ROUND_STATUS = {
 } as const
 export type PlayerRoundStatus = (typeof PLAYER_ROUND_STATUS)[keyof typeof PLAYER_ROUND_STATUS]
 
-export const PLAYER_STATUS = {
+export const PLAYER_GAME_STATUS = {
+    IN_LOBBY: "in-lobby",
+    IN_GAME: "in-game",
+} as const
+export type PlayerGameStatus = (typeof PLAYER_GAME_STATUS)[keyof typeof PLAYER_GAME_STATUS]
+
+export const PLAYER_CONNEXION_STATUS = {
     CONNECTED: "connected",
     WAITING: "waiting",
     DISCONNECTED: "disconnected",
 } as const
-export type PlayerStatus = (typeof PLAYER_STATUS)[keyof typeof PLAYER_STATUS]
+export type PlayerConnexionStatus = (typeof PLAYER_CONNEXION_STATUS)[keyof typeof PLAYER_CONNEXION_STATUS]
 
 export const MESSAGE_TYPE = {
     PLAYER_JOINED: "player-joined",
@@ -56,6 +63,12 @@ export const DIRECTIONS = {
     BOTTOM_RIGHT: [1, 1]
 } as const;
 export type Direction = (typeof DIRECTIONS)[keyof typeof DIRECTIONS]
+
+export const INACTIVITY_TIMEOUT = 5_000;
+
+export const SESSION_TIMEOUT = 3600 * 24;
+
+export const ACTIVE_ROOM_ID = "index";
 
 export const FIRST_NAMES = [
     "Malakar", "Eldrin", "Thalor", "Zareth", "Morvyn", "Seraphis", "Vespera",

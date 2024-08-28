@@ -1,8 +1,12 @@
 import { Form, redirect, useSearchParams } from "@remix-run/react";
 import type { ActionFunctionArgs, MetaFunction } from "partymix";
+import PartySocket from "partysocket";
+import { useEffect, useState } from "react";
 import { styled } from "styled-system/jsx";
+import { Button } from "~/components/Button";
 import { TextHeading } from "~/components/TextHeading";
-import { pickRandomSlug } from "~/game/constants";
+import { useSocketConfig } from "~/context/SocketContext";
+import { ACTIVE_ROOM_ID, pickRandomSlug } from "~/game/constants";
 import { getSession, commitSession } from '~/services/sessions';
 
 export const meta: MetaFunction = () => {
@@ -19,17 +23,22 @@ export async function action({
   const name = String(formData.get("name"));
   const code = String(formData.get("code"));
   const type = String(formData.get("type"));
+  const publicGames = String(formData.get("rooms")).split(",");
+
+  const roomId = pickRandomSlug();
+  const randomString = Math.random().toString(36).substring(2, 10);
+  let slug = `${roomId}-${randomString}`;
+  if (code && type === 'join') {
+    slug = code;
+  } else if (publicGames.length && type === 'join-public') {
+    slug = publicGames[0];
+  }
 
   const session = await getSession(
     request.headers.get("Cookie")
   );
 
   session.set("username", name);
-
-  const roomId = pickRandomSlug();
-  const randomString = Math.random().toString(36).substring(2, 10);
-
-  const slug = code && type === 'join' ? code : `${roomId}-${randomString}`;
 
   return redirect(`/room/${slug}/lobby`, {
     headers: {
@@ -129,33 +138,27 @@ const ActionButtons = styled('div', {
   }
 });
 
-const Button = styled('button', {
-  base: {
-    bg: 'main',
-    color: 'dark',
-    border: '1px solid',
-    borderColor: 'main',
-    fontSize: 'md',
-    padding: '0.5rem',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease-in-out',
-
-    _hover: {
-      bg: 'main/80',
-    },
-
-    _focusVisible: {
-      outline: 'none',
-      shadow: '0px 0px 0px 2px var(--shadow-color)',
-      shadowColor: 'main/50',
-    }
-  }
-});
-
 export default function Index() {
   const [searchParams] = useSearchParams();
+  const {host} = useSocketConfig();
   const codeGame = searchParams.get("code");
+  const [activeRooms, setActiveRooms] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchActiveRooms = async () => {
+      const response = await PartySocket.fetch(
+        { host: host, room: ACTIVE_ROOM_ID, party: "active_rooms" },
+        {
+          method: "GET"
+        }
+      );
+
+      const data = await response.json();
+      setActiveRooms(data.rooms);
+    };
+
+    fetchActiveRooms();
+  }, []);
 
   return (
     <Section>
@@ -163,10 +166,11 @@ export default function Index() {
         Stratagèmes
       </HeadingTitle>
       <WelcomeText heading="h2">
-        Bienvenue dans Stratagèmes, un jeu de placement de pions en ligne.
+        Bienvenue dans Stratagèmes, un jeu de plateau en ligne.
       </WelcomeText>
       <FormContainer method="post">
         <input readOnly type="hidden" name="code" value={codeGame || ""} />
+        <input readOnly type="hidden" name="rooms" value={activeRooms.join(",")} />
 
         <InputContainer>
           <Label htmlFor="name">Votre nom de sorcier</Label>
@@ -174,11 +178,20 @@ export default function Index() {
         </InputContainer>
 
         <ActionButtons>
-          {Boolean(codeGame) && (
-            <Button name="type" value="join">
-              Rejoindre la partie
-            </Button>
-          )}
+          <Button
+            name="type"
+            value="join"
+            disabled={!codeGame}
+            tooltip={!codeGame ? "Utilise un lien de partage pour rejoindre une partie" : undefined}>
+            Rejoindre la partie
+          </Button>
+          <Button
+            name="type"
+            value="join-public"
+            disabled={!activeRooms.length}
+            tooltip={!activeRooms.length ? "Aucune partie publique n'est disponible" : undefined}>
+            Rejoindre une partie publique
+          </Button>
           <Button name="type" value="create">
             Créer une partie
           </Button>

@@ -45,6 +45,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const userId = session.get("userId") || uuidv4();
   const username = session.get("username") || "New wizard";
+
   if (!session.has("userId")) {
     session.set("userId", userId);
   }
@@ -62,6 +63,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function App() {
   const { host, userId, username } = useLoaderData<typeof loader>();
+
+  console.log({ userId, username });
 
   return (
     <html lang="en">

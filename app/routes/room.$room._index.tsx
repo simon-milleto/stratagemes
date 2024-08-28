@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { json, useNavigate, useParams } from "@remix-run/react";
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { DndContext } from '@dnd-kit/core';
 
 import { usePartySocket } from "partysocket/react";
 import { useSocketConfig } from "~/context/SocketContext";
@@ -8,12 +9,12 @@ import type { LoaderFunctionArgs } from 'partymix';
 import { getSession, commitSession } from '~/services/sessions';
 import type { GameState } from 'messages';
 import StratagemBoard from '~/components/StratagemBoard';
-import { GAME_STATUS, PLAYER_ROUND_STATUS, type CellColorType } from '~/game/constants';
+import { GAME_STATUS, PLAYER_ROUND_STATUS } from '~/game/constants';
 import { TextHeading } from '~/components/TextHeading';
 import { styled } from 'styled-system/jsx';
 import { useUser } from '~/context/UserContext';
 import PlayerHand from '~/components/PlayerHand';
-import { Cell, Gem } from '~/types/game';
+import type { Cell, Gem } from '~/types/game';
 import { useToast } from '~/hooks/useToast';
 import GameResume from '~/components/GameResume';
 
@@ -74,7 +75,7 @@ export default function GameRoom() {
             }
 
             const currentPlayerPreviousState = gameState?.players.find(player => player.id === userId);
-            const currentPlayer = gameState?.players.find(player => player.id === userId);
+            const currentPlayer = data?.players.find(player => player.id === userId);
 
             if (currentPlayerPreviousState?.roundStatus === PLAYER_ROUND_STATUS.WAITING
                 && currentPlayer?.roundStatus === PLAYER_ROUND_STATUS.PLAYING

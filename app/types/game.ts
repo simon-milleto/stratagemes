@@ -1,4 +1,4 @@
-import type { CellColorType, GameStatus, PlayerRoundStatus, PlayerStatus } from "~/game/constants"
+import type { CellColorType, GameStatus, PlayerRoundStatus, PlayerGameStatus, PlayerConnexionStatus } from "~/game/constants"
 
 export type Gem = {
     color: CellColorType
@@ -12,8 +12,9 @@ export type Player = {
     handGems: Gem[]
     secretColor: CellColorType | null
     isAdmin: boolean
-    status: PlayerStatus
+    gameStatus: PlayerGameStatus
     roundStatus: PlayerRoundStatus
+    connexionStatus: PlayerConnexionStatus
 }
 
 export type Cell = {

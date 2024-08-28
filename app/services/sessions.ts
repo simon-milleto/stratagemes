@@ -1,5 +1,6 @@
 // app/sessions.ts
 import { createCookieSessionStorage } from "@remix-run/node"; // or cloudflare/deno
+import { SESSION_TIMEOUT } from "~/game/constants";
 
 type SessionData = {
     userId: string;
@@ -23,7 +24,7 @@ const { getSession, commitSession, destroySession } =
                 //
                 // expires: new Date(Date.now() + 60_000),
                 httpOnly: true,
-                maxAge: 60,
+                maxAge: SESSION_TIMEOUT,
                 path: "/",
                 sameSite: "lax",
                 secrets: ["s3cret1"],

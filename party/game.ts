@@ -3,11 +3,11 @@
 // are connected to the room, and where they're from.
 
 import { Board } from "~/game/Board";
-import type { GameState, MessageFromClient } from "../messages";
+import type { GameState, MessageFromClient, RequestData } from "../messages";
 
 import type * as Party from "partykit/server";
 import { Player } from "~/game/Player";
-import { GAME_STATUS, PLAYER_ROUND_STATUS, PLAYER_STATUS } from "~/game/constants";
+import { GAME_STATUS, PLAYER_ROUND_STATUS, PLAYER_CONNEXION_STATUS, INACTIVITY_TIMEOUT, ACTIVE_ROOM_ID } from "~/game/constants";
 
 type ConnectionState = {
     username: string;
@@ -19,7 +19,6 @@ const DEBUG = false;
 export default class MyRemix implements Party.Server {
     state: GameState;
     board: Board;
-    timeoutRefs: Record<string, ReturnType<typeof setTimeout>> = {};
 
     // eslint-disable-next-line no-useless-constructor
     constructor(public room: Party.Room) {
@@ -27,33 +26,11 @@ export default class MyRemix implements Party.Server {
         this.state = this.board.getGameState();
     }
 
-    // let's opt in to hibernation mode, for much higher concurrency
-    // like, 1000s of people in a room 🤯
-    // This has tradeoffs for the developer, like needing to hydrate/rehydrate
-    // state on start, so be careful!
     static options = {
         hibernate: false,
     };
 
     static async onBeforeConnect(request: Party.Request, lobby: Party.Lobby) {
-        try {
-            // get username
-            const username = new URL(request.url).searchParams.get("username") ?? "";
-            const userId = new URL(request.url).searchParams.get("userId") ?? "";
-
-            request.headers.set("X-Username", username);
-            request.headers.set("X-User-ID", userId);
-
-            // forward the request onwards on onConnect
-            return request;
-        } catch (e) {
-            // authentication failed!
-            // short-circuit the request before it's forwarded to the party
-            return new Response("Unauthorized", { status: 401 });
-        }
-    }
-
-    static async onBeforeDisconnect(request: Party.Request, connection: Party.Connection) {
         try {
             // get username
             const username = new URL(request.url).searchParams.get("username") ?? "";
@@ -83,6 +60,17 @@ export default class MyRemix implements Party.Server {
                 if (player && player.isAdmin) {
                     this.board.startGame();
                     player.roundStatus = PLAYER_ROUND_STATUS.PLAYING;
+
+                    const activeRoomsRoom = this.getActiveRoomsRoom();
+
+                    console.log('notify room inactive');
+                    await activeRoomsRoom.fetch({
+                        method: "POST",
+                        body: JSON.stringify({
+                            type: "inactive",
+                            roomId: this.room.id
+                        } satisfies RequestData)
+                    });
 
                     this.state = this.board.getGameState();
                     this.room.broadcast(JSON.stringify(this.state));
@@ -125,18 +113,28 @@ export default class MyRemix implements Party.Server {
         const existingPlayer = this.board.getPlayerById(userId);
         const player = this.board.getPlayerById(userId) || new Player(username, userId);
 
-        player.status = PLAYER_STATUS.CONNECTED;
+        player.connexionStatus = PLAYER_CONNEXION_STATUS.CONNECTED;
 
-        clearTimeout(this.timeoutRefs[userId]);
+        this.board.ensureAdminIsSet();
 
-        if (this.board.players.length === 0) {
-            player.isAdmin = true;
-            this.board.status = GAME_STATUS.LOBBY;
+        if (this.board.status === GAME_STATUS.LOBBY) {
+            // get handle to a shared room instance of the "activeRooms" party
+            const activeRoomsRoom = this.getActiveRoomsRoom();
+
+            // notify room by making an HTTP POST request
+            console.log('notify room active');
+            await activeRoomsRoom.fetch({
+                method: "POST",
+                body: JSON.stringify({
+                    type: "active",
+                    roomId: this.room.id
+                } satisfies RequestData)
+            });
         }
 
         if (!existingPlayer) {
+            console.log(`NOT EXISTING PLAYER ${player.getUsername()}`);
             this.board.addPlayer(player);
-
         }
 
         if (DEBUG && this.board.players.length < 2) {
@@ -163,11 +161,11 @@ export default class MyRemix implements Party.Server {
 
         const player = this.board.getPlayerById(userId);
         if (player) {
-            player.status = PLAYER_STATUS.DISCONNECTED;
+            player.connexionStatus = PLAYER_CONNEXION_STATUS.DISCONNECTED;
         }
+        this.board.status = GAME_STATUS.WAITING_PLAYERS;
 
         this.state = this.board.getGameState();
-
         
         if (DEBUG) {
             this.board.removePlayerById(userId);
@@ -176,20 +174,39 @@ export default class MyRemix implements Party.Server {
 
         this.room.broadcast(JSON.stringify(this.state));
 
-        // Remove player after 20s of inactivity
-        this.timeoutRefs[userId] = setTimeout(() => {
-            this.board.removePlayerById(userId);
+        this.room.storage.setAlarm(Date.now() + INACTIVITY_TIMEOUT);
+    }
 
-            if (this.board.players.length === 0) {
-                this.board.status = GAME_STATUS.STOPPED;
-            } else if (this.board.players.length === 1) {
-                this.board.status = GAME_STATUS.LOBBY;
+    onAlarm(): void | Promise<void> {
+        this.board.players.forEach(player => {
+            if (player.connexionStatus === PLAYER_CONNEXION_STATUS.DISCONNECTED) {
+                this.board.removePlayerById(player.getId());
             }
+        });
 
-            this.state = this.board.getGameState();
+        if (this.board.players.length === 0) {
+            this.board.status = GAME_STATUS.STOPPED;
+        } else if (this.board.players.length === 1) {
+            this.board.status = GAME_STATUS.LOBBY;
+        } else {
+            const currentPlayer = this.board.getCurrentPlayer();
+            if (!currentPlayer) {
+                this.board.players[0].roundStatus = PLAYER_ROUND_STATUS.PLAYING;
+            }
+        }
 
-            this.room.broadcast(JSON.stringify(this.state));
-        }, 20_000);
+        this.state = this.board.getGameState();
+
+        this.room.broadcast(JSON.stringify(this.state));
+
+    }
+
+    getActiveRoomsRoom() {
+        const activeRoomsParty = this.room.context.parties.active_rooms;
+        const activeRoomsRoomId = ACTIVE_ROOM_ID;
+        const activeRoomsRoom = activeRoomsParty.get(activeRoomsRoomId);
+
+        return activeRoomsRoom;
     }
 
     // This is called when a connection has an error

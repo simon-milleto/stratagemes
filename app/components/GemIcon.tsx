@@ -1,5 +1,6 @@
 import { LuGem } from "react-icons/lu";
 import { styled } from "styled-system/jsx";
+import type { CellColorType } from "~/game/constants";
 import type { Gem } from "~/types/game";
 
 const Icon = styled(LuGem, {
@@ -30,6 +31,6 @@ const Icon = styled(LuGem, {
     }
 });
 
-export default function GemIcon({ gem }: { gem: Gem }) {
-    return <Icon color={gem.color} />;
+export default function GemIcon({ gem, color }: { gem?: Gem; color?: CellColorType }) {
+    return <Icon color={gem?.color || color} />;
 }

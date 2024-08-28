@@ -22,3 +22,8 @@ export type MessageFromClient = {
   userId: string;
   gems: Gem[];
 };
+
+export type RequestData = {
+  type: "active" | "inactive",
+  roomId: string;
+}
