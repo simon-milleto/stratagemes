@@ -1,6 +1,6 @@
 import type { GameStatus, CellColorType } from '~/game/constants';
 import type { Cell as CellJson } from "~/types/game";
-import { DIRECTIONS, GAME_STATUS, CELL_COLOR, PLAYER_ROUND_STATUS } from '~/game/constants';
+import { DIRECTIONS, GAME_STATUS, CELL_COLOR, PLAYER_ROUND_STATUS, PLAYER_GAME_STATUS } from '~/game/constants';
 import { Cell } from './Cell';
 import type { Player } from './Player';
 import { Gem } from './Gem';
@@ -58,6 +58,8 @@ export class Board {
             player.board = this;
             const indexColor = Math.floor(Math.random() * this.availablePlayerColors.length);
             player.secretColor = this.availablePlayerColors[indexColor];
+            player.gameStatus = PLAYER_GAME_STATUS.IN_GAME;
+
             this.availablePlayerColors.splice(indexColor, 1);
         }
 

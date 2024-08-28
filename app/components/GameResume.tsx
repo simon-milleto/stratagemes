@@ -1,6 +1,7 @@
 import { GameState } from "messages";
 import { Flex, styled } from "styled-system/jsx";
 import GemIcon from "./GemIcon";
+import { PLAYER_ROUND_STATUS } from "~/game/constants";
 
 const PanelTitle = styled('span', {
     base: {
@@ -40,14 +41,18 @@ const Player = styled('div', {
         justifyContent: 'center',
         gap: '1rem',
         padding: '1rem',
-        backgroundColor: 'main.light',
         shadow: '0px 0px 0px 2px var(--shadow-color)',
         shadowColor: 'main/50',
+        backgroundColor: 'main.light',
+
     },
     variants: {
         active: {
             false: {
                 opacity: '0.8',
+            },
+            true: {
+                animation: 'currentPlayerFlash 0.5s infinite alternate ease-in-out',
             }
         }
     }
@@ -69,14 +74,16 @@ export default function GameResume({ gameState }: { gameState: GameState }) {
             </PanelTitle>
             <PlayersContainer>
                 {gameState.players.map((player) => (
-                    <Player key={player.id}>
+                    <Player
+                        key={player.id}
+                        active={player.roundStatus === PLAYER_ROUND_STATUS.PLAYING}>
                         <PlayerLabel>{player.username}</PlayerLabel>
                         {player.gemWons.length === 0 ? (
                             <>
-                                Aucun gème gagnée
+                                Aucun gemme gagnée
                             </>
                         ) : (<>
-                            Gèmes gagnées
+                            Gemmes gagnées
 
                             <Flex>
                                 {player.gemWons.map((gem) => (

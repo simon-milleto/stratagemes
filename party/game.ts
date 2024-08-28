@@ -30,6 +30,13 @@ export default class MyRemix implements Party.Server {
         hibernate: false,
     };
 
+    async onStart(): Promise<void> {
+        if (this.room.id) {
+            // save id when room starts from a connection or request
+            await this.room.storage.put<string>("id", this.room.id);
+        }
+    }
+
     static async onBeforeConnect(request: Party.Request, lobby: Party.Lobby) {
         try {
             // get username
@@ -63,7 +70,6 @@ export default class MyRemix implements Party.Server {
 
                     const activeRoomsRoom = this.getActiveRoomsRoom();
 
-                    console.log('notify room inactive');
                     await activeRoomsRoom.fetch({
                         method: "POST",
                         body: JSON.stringify({
@@ -115,14 +121,11 @@ export default class MyRemix implements Party.Server {
 
         player.connexionStatus = PLAYER_CONNEXION_STATUS.CONNECTED;
 
-        this.board.ensureAdminIsSet();
-
         if (this.board.status === GAME_STATUS.LOBBY) {
             // get handle to a shared room instance of the "activeRooms" party
             const activeRoomsRoom = this.getActiveRoomsRoom();
 
             // notify room by making an HTTP POST request
-            console.log('notify room active');
             await activeRoomsRoom.fetch({
                 method: "POST",
                 body: JSON.stringify({
@@ -133,7 +136,6 @@ export default class MyRemix implements Party.Server {
         }
 
         if (!existingPlayer) {
-            console.log(`NOT EXISTING PLAYER ${player.getUsername()}`);
             this.board.addPlayer(player);
         }
 
@@ -143,6 +145,8 @@ export default class MyRemix implements Party.Server {
 
             this.board.startGame();
         }
+
+        this.board.ensureAdminIsSet();
 
         this.state = this.board.getGameState();
 
@@ -177,7 +181,9 @@ export default class MyRemix implements Party.Server {
         this.room.storage.setAlarm(Date.now() + INACTIVITY_TIMEOUT);
     }
 
-    onAlarm(): void | Promise<void> {
+    async onAlarm(): Promise<void> {
+        const id = await this.room.storage.get<string>("id");
+
         this.board.players.forEach(player => {
             if (player.connexionStatus === PLAYER_CONNEXION_STATUS.DISCONNECTED) {
                 this.board.removePlayerById(player.getId());
@@ -186,6 +192,13 @@ export default class MyRemix implements Party.Server {
 
         if (this.board.players.length === 0) {
             this.board.status = GAME_STATUS.STOPPED;
+
+            if (id) {
+                this.sendRequestToActiveRooms({
+                    type: "inactive",
+                    roomId: id
+                });
+            }
         } else if (this.board.players.length === 1) {
             this.board.status = GAME_STATUS.LOBBY;
         } else {
@@ -207,6 +220,18 @@ export default class MyRemix implements Party.Server {
         const activeRoomsRoom = activeRoomsParty.get(activeRoomsRoomId);
 
         return activeRoomsRoom;
+    }
+
+    async sendRequestToActiveRooms(data: RequestData) {
+        const host = process.env.PARTYKIT_HOST;
+        const protocol = host?.startsWith("localhost") || host?.startsWith("127.0") ? "http" : "https";
+
+        const url = `${protocol}://${host}/parties/active_rooms/index`;
+
+        await fetch(url, {
+            method: "POST",
+            body: JSON.stringify(data)
+        });
     }
 
     // This is called when a connection has an error

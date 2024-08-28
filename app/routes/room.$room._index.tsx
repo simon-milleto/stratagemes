@@ -11,7 +11,7 @@ import type { GameState } from 'messages';
 import StratagemBoard from '~/components/StratagemBoard';
 import { GAME_STATUS, PLAYER_ROUND_STATUS } from '~/game/constants';
 import { TextHeading } from '~/components/TextHeading';
-import { styled } from 'styled-system/jsx';
+import { Flex, styled } from 'styled-system/jsx';
 import { useUser } from '~/context/UserContext';
 import PlayerHand from '~/components/PlayerHand';
 import type { Cell, Gem } from '~/types/game';
@@ -82,7 +82,7 @@ export default function GameRoom() {
             ) {
                 toast({
                     title: "À votre tour !",
-                    subtitle: "Placez une gème sur le plateau",
+                    subtitle: "Placez une gemme sur le plateau",
                 })
             }
         },
@@ -125,13 +125,19 @@ export default function GameRoom() {
                 Stratagèmes
             </HeadingTitle>
             <DndContext onDragEnd={handleDragEnd}>
-                <StratagemBoard
-                    board={gameState} />
-                <PlayerHand
-                    onExchange={handleExchange}
-                    currentPlayer={currentPlayer} />
+                <Flex gap="2rem">
+                    <Flex gap="2rem" direction="column">
+                        <StratagemBoard
+                            board={gameState} />
+                        <PlayerHand
+                            onExchange={handleExchange}
+                            currentPlayer={currentPlayer} />
+                    </Flex>
+                    <Flex direction="column">
+                        <GameResume gameState={gameState} />
+                    </Flex>
+                </Flex>
             </DndContext>
-            <GameResume gameState={gameState} />
         </Section>
     );
 }

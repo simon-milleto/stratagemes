@@ -22,18 +22,6 @@ import { UserContext } from "./context/UserContext";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: styles },
-  {
-    rel: 'preconnect',
-    href: 'https://fonts.googleapis.com'
-  },
-  {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com'
-  },
-  {
-    href: 'https://fonts.googleapis.com/css2?family=Caudex:ital,wght@0,400;0,700;1,400;1,700&display=swap',
-    rel: 'stylesheet'
-  },
 ];
 
 export async function loader({ request }: LoaderFunctionArgs) {

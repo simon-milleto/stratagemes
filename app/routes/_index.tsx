@@ -6,7 +6,9 @@ import { styled } from "styled-system/jsx";
 import { Button } from "~/components/Button";
 import { TextHeading } from "~/components/TextHeading";
 import { useSocketConfig } from "~/context/SocketContext";
+import { useUser } from "~/context/UserContext";
 import { ACTIVE_ROOM_ID, pickRandomSlug } from "~/game/constants";
+import { useDialog } from "~/hooks/useDialog";
 import { getSession, commitSession } from '~/services/sessions';
 
 export const meta: MetaFunction = () => {
@@ -141,8 +143,10 @@ const ActionButtons = styled('div', {
 export default function Index() {
   const [searchParams] = useSearchParams();
   const {host} = useSocketConfig();
+  const {username} = useUser();
   const codeGame = searchParams.get("code");
   const [activeRooms, setActiveRooms] = useState<string[]>([]);
+  const dialog = useDialog();
 
   useEffect(() => {
     const fetchActiveRooms = async () => {
@@ -160,6 +164,14 @@ export default function Index() {
     fetchActiveRooms();
   }, []);
 
+  const openRulesDialog = () => {
+    dialog({
+      title: "Règles",
+      description: "Sorciers, votre objectif est d’invoquer des pierres précieuses pour créer des alignements ou capturer les pierres de vos adversaires. Cependant, la magie d’invocation de pierre précieuse est imprévisible ! Vous ne pouvez garantir la génération de votre pierre secrète de prédilection… Analysez, adaptez votre stratégie et anticipez les mouvements de vos adversaires pour gagner !",
+      content: null
+    });
+  }
+
   return (
     <Section>
       <HeadingTitle>
@@ -174,8 +186,16 @@ export default function Index() {
 
         <InputContainer>
           <Label htmlFor="name">Votre nom de sorcier</Label>
-          <Input type="text" id="name" name="name" placeholder="New wizard" required />
+          <Input type="text" id="name" name="name" defaultValue={username || ""} placeholder="New wizard" required />
         </InputContainer>
+
+        <Button
+          type='button'
+          visual='outline'
+          size='sm'
+          onClick={openRulesDialog}>
+          Voir les règles
+        </Button>
 
         <ActionButtons>
           <Button

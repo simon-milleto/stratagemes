@@ -3,14 +3,27 @@ import { defineConfig, defineGlobalStyles } from "@pandacss/dev"
 const globalCss = defineGlobalStyles({
   'html, body': {
     scrollBehavior: 'smooth',
-    fontFamily: "'Caudex', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif"
+    fontFamily: "'Buda', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif"
   }
 })
 
 export default defineConfig({
   // Whether to use css reset
   preflight: true,
-
+  globalFontface: {
+    Buda: {
+      src: 'url(/fonts/Buda-Light.ttf) format("truetype")',
+      fontWeight: 400,
+      fontStyle: 'normal',
+      fontDisplay: 'swap'
+    },
+    Vinque: {
+      src: 'url(/fonts/vinque.rg-regular.otf) format("opentype")',
+      fontWeight: 400,
+      fontStyle: 'normal',
+      fontDisplay: 'swap'
+    }
+  },
   globalCss,
 
   // Where to look for your css declarations
@@ -33,6 +46,10 @@ export default defineConfig({
           from: { opacity: 1 },
           to: { opacity: 0 },
         },
+        currentPlayerFlash: {
+          from: { backgroundColor: 'main' },
+          to: { backgroundColor: 'main.light' },
+        },
         toastSlideIn: {
           from: { transform: 'translateX(calc(100% + var(--viewport-padding)))' },
           to: { transform: 'translateX(0)' },
@@ -51,6 +68,10 @@ export default defineConfig({
         },
       },
       tokens: {
+        fonts: {
+          body: { value: 'Buda' },
+          heading: { value: 'Vinque' }
+        },
         sizes: {
           maxContainer: { value: '1260px' }
         },
@@ -63,10 +84,10 @@ export default defineConfig({
           },
 
           'dark': {
-            value: '#261921'
+            value: '#111111'
           },
           'dark.secondary': {
-            value: '#3D2F37'
+            value: '#333333'
           },
           'gem.red': {
             value: '#b34c4e'

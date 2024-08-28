@@ -197,7 +197,7 @@ const PlayerHand = ({ currentPlayer, onExchange }: { currentPlayer: Player | nul
             </GemContainer>
             {currentPlayer.roundStatus === PLAYER_ROUND_STATUS.DRAW_GEMS && (<>
                 <DrawLabel>
-                    Sélectionnez les gèmes que vous souhaitez échanger ou passer
+                    Sélectionnez les gemmes que vous souhaitez échanger ou passer
                 </DrawLabel>
                 <GemContainer>
                     {currentPlayer.handGems.map((gem) => (
@@ -216,7 +216,7 @@ const PlayerHand = ({ currentPlayer, onExchange }: { currentPlayer: Player | nul
             </>)}
 
             <PanelTitle>
-                Votre gème secrète
+                Votre couleur secrète
             </PanelTitle>
             {currentPlayer.secretColor ? (
                 <GemIcon color={currentPlayer.secretColor} />

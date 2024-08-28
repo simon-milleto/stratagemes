@@ -13,6 +13,7 @@ export const headingRecipe = cva({
         fontWeight: 'bold',
         color: 'main',
         letterSpacing: '0.05em',
+        fontFamily: 'heading',
     },
     variants: {
         shadow: {

@@ -16,14 +16,32 @@ export const buttonRecipe = cva({
         cursor: 'pointer',
         transition: 'all 0.3s ease-in-out',
 
+        _before: {
+            content: '""',
+            position: 'absolute',
+            inset: '0px',
+            border: '2px solid',
+            borderColor: 'transparent',
+
+            transition: 'all 0.3s ease-in-out',
+        },
+
         _hover: {
             bg: 'main/80',
+
+            _before: {
+                inset: '4px',
+                borderColor: 'main',
+            },
         },
 
         _focusVisible: {
             outline: 'none',
-            shadow: '0px 0px 0px 2px var(--shadow-color)',
-            shadowColor: 'main/50',
+
+            _before: {
+                inset: '4px',
+                borderColor: 'main',
+            },
         },
 
         _disabled: {
@@ -38,10 +56,10 @@ export const buttonRecipe = cva({
     variants: {
         visual: {
             solid: { bg: 'main', color: 'dark' },
-            outline: { borderWidth: '1px', borderColor: 'main', color: 'main', bg: 'dark', _hover: { bg: 'main/10' } }
+            outline: { borderWidth: '1px', borderColor: 'main', color: 'main', _hover: { bg: 'main/10' } }
         },
         size: {
-            sm: { padding: '2', fontSize: '0.8rem' },
+            sm: { padding: '2', fontSize: '0.8rem', _hover: { _before: { inset: '2px', border: '1px solid' } } },
             md: { padding: '4', fontSize: '1rem' },
             lg: { padding: '8', fontSize: '1.4rem' }
         }

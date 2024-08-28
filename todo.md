@@ -1,7 +1,5 @@
 - Add winner animation
 - Add play again
-- Add secret gem to current user
-- Add disconnected message, waiting for reconnection
 - Add chat message
 - Add score
 - Mobile version
