@@ -101,7 +101,7 @@ export const ADJECTIVES = [
     "Celestial", "Dreadful", "Lunar", "Infernal"
 ];
 
-const pickRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+export const pickRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
 export const pickRandomSlug = () => (
     `${pickRandom(ADJECTIVES).toLowerCase()}-${pickRandom(FAMILY_NAMES).toLowerCase()}-${pickRandom(FIRST_NAMES).toLowerCase()}`

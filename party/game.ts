@@ -90,6 +90,14 @@ export default class MyRemix implements Party.Server {
                     this.room.broadcast(JSON.stringify(this.state));
                 }
                 break;
+            case "play-again":
+                this.board.cleanupGame();
+                this.board.startGame();
+                this.board.randomPlayerStarts();
+
+                this.state = this.board.getGameState();
+                this.room.broadcast(JSON.stringify(this.state));
+                break;
             case "exchange":
                 if (player) {
                     const nextPlayer = this.board.getNextPlayer();

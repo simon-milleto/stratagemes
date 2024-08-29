@@ -7,7 +7,7 @@ import { usePartySocket } from "partysocket/react";
 import { useSocketConfig } from "~/context/SocketContext";
 import type { LoaderFunctionArgs } from 'partymix';
 import { getSession, commitSession } from '~/services/sessions';
-import type { GameState } from 'messages';
+import type { GameState, MessageFromClient } from 'messages';
 import StratagemBoard from '~/components/StratagemBoard';
 import { GAME_STATUS, PLAYER_ROUND_STATUS } from '~/game/constants';
 import { TextHeading } from '~/components/TextHeading';
@@ -17,6 +17,7 @@ import PlayerHand from '~/components/PlayerHand';
 import type { Cell, Gem } from '~/types/game';
 import { useToast } from '~/hooks/useToast';
 import GameResume from '~/components/GameResume';
+import { GameContext } from '~/context/GameContext';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const session = await getSession(
@@ -114,30 +115,46 @@ export default function GameRoom() {
                     row: cell.row,
                     col: cell.col,
                     gem: gem
-                }));
+                } satisfies MessageFromClient));
             }
         }
     }
 
+    const handlePlayAgain = () => {
+        partySocket.send(JSON.stringify({
+            type: 'play-again'
+        } satisfies MessageFromClient));
+    }
+
     return (
-        <Section>
-            <HeadingTitle>
-                Stratagèmes
-            </HeadingTitle>
-            <DndContext onDragEnd={handleDragEnd}>
-                <Flex gap="2rem">
-                    <Flex gap="2rem" direction="column">
-                        <StratagemBoard
-                            board={gameState} />
-                        <PlayerHand
-                            onExchange={handleExchange}
-                            currentPlayer={currentPlayer} />
+        <GameContext.Provider value={{ gameState }}>
+            <Section>
+                <HeadingTitle>
+                    Stratagèmes
+                </HeadingTitle>
+                <DndContext onDragEnd={handleDragEnd}>
+                    <Flex
+                        direction={{
+                            base: 'column',
+                            md: 'row'
+                        }}
+                        gap="2rem"
+                        width="100%">
+                        <Flex
+                            gap="2rem"
+                            flex="1 1 60%"
+                            direction="column">
+                            <StratagemBoard />
+                            <PlayerHand
+                                onExchange={handleExchange}
+                                currentPlayer={currentPlayer} />
+                        </Flex>
+                        <Flex direction="column">
+                            <GameResume onPlayAgain={handlePlayAgain} />
+                        </Flex>
                     </Flex>
-                    <Flex direction="column">
-                        <GameResume gameState={gameState} />
-                    </Flex>
-                </Flex>
-            </DndContext>
-        </Section>
+                </DndContext>
+            </Section>
+        </GameContext.Provider>
     );
 }

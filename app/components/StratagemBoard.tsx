@@ -1,6 +1,6 @@
 import { styled } from 'styled-system/jsx';
-import type { GameState } from 'messages';
 import BoardCell from './BoardCell';
+import { useGameState } from '~/context/GameContext';
 
 const Board = styled('div', {
     base: {
@@ -20,16 +20,14 @@ const Row = styled('div', {
     }
 });
 
-const StratagemBoard = ({
-    board,
-}: {
-    board: GameState
-}) => {
+const StratagemBoard = () => {
+    const { gameState } = useGameState();
+
     return (
             <Board style={{
-                '--board-size': board.size
+                '--board-size': gameState.size
             } as React.CSSProperties}>
-                {board.cells.map((row, i) => (
+                {gameState.cells.map((row, i) => (
                     <Row key={i}>
                         {row.map((cell, j) => (
                                 <BoardCell

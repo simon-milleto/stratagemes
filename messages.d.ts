@@ -12,6 +12,8 @@ export interface GameState extends Board {}
 export type MessageFromClient = {
   type: "start";
 } | {
+  type: "play-again";
+} | {
   type: "move";
   userId: string;
   row: number;

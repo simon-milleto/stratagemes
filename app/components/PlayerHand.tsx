@@ -7,6 +7,7 @@ import { PLAYER_ROUND_STATUS } from "~/game/constants";
 import { useState } from "react";
 import { Button } from "./Button";
 import GemIcon from "./GemIcon";
+import { useGameState } from "~/context/GameContext";
 
 const PanelTitle = styled('span', {
     base: {
@@ -164,8 +165,9 @@ const GemHand = ({ gem, shouldPlay }: { gem: GemType, shouldPlay: boolean }) => 
 
 const PlayerHand = ({ currentPlayer, onExchange }: { currentPlayer: Player | null, onExchange: (gems: GemType[]) => void }) => {
     const [selectedGems, setSelectedGems] = useState<GemType[]>([]);
+    const { gameState } = useGameState();
 
-    if (!currentPlayer) return null;
+    if (!currentPlayer || gameState.winner) return null;
 
     const handleToggleGem = (gem: GemType) => {
         if (selectedGems.find(selectedGem => selectedGem.id === gem.id)) {

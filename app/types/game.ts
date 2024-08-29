@@ -31,4 +31,5 @@ export type Board = {
     status: GameStatus
     players: Player[]
     playerToPlay: Player | null
+    winner: Player | null
 }

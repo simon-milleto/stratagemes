@@ -20,6 +20,14 @@ export class Board {
         this.id = id;
     }
 
+    cleanupGame() {
+        this.winner = null;
+        this.round = 0;
+        for (const player of this.players) {
+            player.roundStatus = PLAYER_ROUND_STATUS.WAITING;
+        }
+    }
+
     startGame() {
         switch (this.players.length) {
             case 2:
@@ -64,6 +72,13 @@ export class Board {
         }
 
         this.status = GAME_STATUS.PLAYING;
+    }
+
+    randomPlayerStarts() {
+        if (!this.getCurrentPlayer()) {
+            const indexPlayer = Math.floor(Math.random() * this.players.length);
+            this.players[indexPlayer].roundStatus = PLAYER_ROUND_STATUS.PLAYING;
+        }
     }
 
     addPlayer(player: Player) {
@@ -219,7 +234,7 @@ export class Board {
     }
 
     private checkLine(row: number, col: number, dx: number, dy: number, color: CellColorType): boolean {
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 1; i++) {
         const cell = this.getCell(row + i * dx, col + i * dy);
         if (!cell || cell.getColor() !== color) {
           return false;

@@ -4,10 +4,11 @@ import PartySocket from "partysocket";
 import { useEffect, useState } from "react";
 import { styled } from "styled-system/jsx";
 import { Button } from "~/components/Button";
+import RulesDescription from "~/components/RulesDescription";
 import { TextHeading } from "~/components/TextHeading";
 import { useSocketConfig } from "~/context/SocketContext";
 import { useUser } from "~/context/UserContext";
-import { ACTIVE_ROOM_ID, pickRandomSlug } from "~/game/constants";
+import { ACTIVE_ROOM_ID, pickRandomSlug, pickRandom } from "~/game/constants";
 import { useDialog } from "~/hooks/useDialog";
 import { getSession, commitSession } from '~/services/sessions';
 
@@ -33,7 +34,7 @@ export async function action({
   if (code && type === 'join') {
     slug = code;
   } else if (publicGames.length && type === 'join-public') {
-    slug = publicGames[0];
+    slug = pickRandom(publicGames);
   }
 
   const session = await getSession(
@@ -168,7 +169,7 @@ export default function Index() {
     dialog({
       title: "Règles",
       description: "Sorciers, votre objectif est d’invoquer des pierres précieuses pour créer des alignements ou capturer les pierres de vos adversaires. Cependant, la magie d’invocation de pierre précieuse est imprévisible ! Vous ne pouvez garantir la génération de votre pierre secrète de prédilection… Analysez, adaptez votre stratégie et anticipez les mouvements de vos adversaires pour gagner !",
-      content: null
+      content: <RulesDescription />
     });
   }
 

@@ -7,14 +7,14 @@ import type { Cell as CellType } from '~/types/game';
 const Cell = styled('button', {
     base: {
         position: 'relative',
-        width: 'min(8vw, 10vh)',
-        height: 'min(8vw, 10vh)',
+        width: 'clamp(40px, calc(60vw / var(--board-size)), 80px)',
+        height: 'clamp(40px, calc(60vw / var(--board-size)), 80px)',
         border: '1px solid',
         borderColor: 'main',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        fontSize: '2.2em',
+        fontSize: 'clamp(1.6rem, 5vw, 2.4rem)',
         fontWeight: '500',
         fontFamily: 'inherit',
         backgroundColor: 'white',

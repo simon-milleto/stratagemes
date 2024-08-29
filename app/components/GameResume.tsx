@@ -1,7 +1,9 @@
-import { GameState } from "messages";
 import { Flex, styled } from "styled-system/jsx";
 import GemIcon from "./GemIcon";
 import { PLAYER_ROUND_STATUS } from "~/game/constants";
+import { TextLink } from "./TextLink";
+import { Button } from "./Button";
+import { useGameState } from "~/context/GameContext";
 
 const PanelTitle = styled('span', {
     base: {
@@ -66,7 +68,10 @@ const PlayerLabel = styled('span', {
         fontWeight: 'bold',
     }
 });
-export default function GameResume({ gameState }: { gameState: GameState }) {
+
+export default function GameResume({ onPlayAgain }: { onPlayAgain: () => void }) {
+    const { gameState } = useGameState();
+
     return (
         <Container>
             <PanelTitle>
@@ -77,7 +82,8 @@ export default function GameResume({ gameState }: { gameState: GameState }) {
                     <Player
                         key={player.id}
                         active={player.roundStatus === PLAYER_ROUND_STATUS.PLAYING}>
-                        <PlayerLabel>{player.username}</PlayerLabel>
+                        <PlayerLabel>{player.username} {gameState.winner?.id === player.id ? 'a gagné !' : ''}</PlayerLabel>
+                        
                         {player.gemWons.length === 0 ? (
                             <>
                                 Aucun gemme gagnée
@@ -95,6 +101,16 @@ export default function GameResume({ gameState }: { gameState: GameState }) {
                     </Player>
                 ))}
             </PlayersContainer>
+            {gameState.winner ? (
+                <Button onClick={onPlayAgain}>
+                    Rejouer
+                </Button>
+            ) : null}
+            <Flex color="white" fontWeight="bold">
+                <TextLink to="/">
+                    Revenir à l'accueil
+                </TextLink>
+            </Flex>
         </Container>
     )
 }

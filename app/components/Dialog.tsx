@@ -25,6 +25,7 @@ const Content = styled(DialogPrimitives.Content, {
         maxWidth: '650px',
         maxHeight: '85vh',
         padding: '25px',
+        overflow: 'auto',
         animation: `contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
         '&:focus': {
             outline: 'none',
