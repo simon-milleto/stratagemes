@@ -234,7 +234,7 @@ export class Board {
     }
 
     private checkLine(row: number, col: number, dx: number, dy: number, color: CellColorType): boolean {
-      for (let i = 0; i < 1; i++) {
+      for (let i = 0; i < 4; i++) {
         const cell = this.getCell(row + i * dx, col + i * dy);
         if (!cell || cell.getColor() !== color) {
           return false;

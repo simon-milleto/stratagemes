@@ -42,6 +42,12 @@ export default class Rooms implements Party.Server {
             const requestData = await req.json() as RequestData;
             if (requestData && 'type' in requestData) {
                 switch (requestData.type) {
+                    case "clean-all":
+                        this.activeRoomsId = [];
+
+                        await this.room.storage.put("activeRoomsId", this.activeRoomsId);
+
+                        return new Response(null, { status: 201, headers });
                     case "active":
                         if (!this.activeRoomsId.includes(requestData.roomId)) {
                             this.activeRoomsId.push(requestData.roomId);

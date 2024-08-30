@@ -86,6 +86,14 @@ export default function GameRoom() {
                     subtitle: "Placez une gemme sur le plateau",
                 })
             }
+
+            if (gameState && !gameState.winner && data.winner) {
+                toast({
+                    title: "Partie terminée !",
+                    subtitle: `${data.winner.username} a gagné !`,
+                    mode: "info"
+                });
+            }
         },
     });
 

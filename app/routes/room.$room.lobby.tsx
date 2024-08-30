@@ -18,6 +18,7 @@ import { Button } from '~/components/Button';
 import { WithTooltip } from '~/components/WithTooltip';
 import { useDialog } from '~/hooks/useDialog';
 import { useUser } from '~/context/UserContext';
+import RulesDescription from '~/components/RulesDescription';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const session = await getSession(
@@ -273,7 +274,7 @@ export default function GameLobby() {
         dialog({
             title: "Règles",
             description: "Sorciers, votre objectif est d’invoquer des pierres précieuses pour créer des alignements ou capturer les pierres de vos adversaires. Cependant, la magie d’invocation de pierre précieuse est imprévisible ! Vous ne pouvez garantir la génération de votre pierre secrète de prédilection… Analysez, adaptez votre stratégie et anticipez les mouvements de vos adversaires pour gagner !",
-            content: null
+            content: <RulesDescription />
         });
     }
 

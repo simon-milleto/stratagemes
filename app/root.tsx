@@ -8,6 +8,7 @@ import {
 } from "@remix-run/react";
 import type { LinksFunction, LoaderFunctionArgs} from "partymix";
 import { json } from "partymix";
+import { Analytics } from "@vercel/analytics/react"
 import styles from "./index.css?url"
 
 import { SocketConfigContext } from "~/context/SocketContext";
@@ -82,6 +83,7 @@ export default function App() {
             </UserContext.Provider>
           </main>
         </Theme>
+        <Analytics />
         <ScrollRestoration />
         <Scripts />
       </body>

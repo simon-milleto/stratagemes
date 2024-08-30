@@ -4,7 +4,7 @@ import { cva } from "styled-system/css";
 type TextHeadingProps = PropsWithChildren<{
     heading?: `h1` | `h2` | `h3` | `h4` | `h5` | `h6`;
     className?: string;
-    shadow?: boolean;
+    hasShadow?: boolean;
 }>;
 
 export const headingRecipe = cva({
@@ -16,7 +16,7 @@ export const headingRecipe = cva({
         fontFamily: 'heading',
     },
     variants: {
-        shadow: {
+        hasShadow: {
             true: {
                 textShadow: '0 0 2px var(--text-shadow-color)',
                 textShadowColor: 'dark',
@@ -32,14 +32,14 @@ export const headingRecipe = cva({
 export const TextHeading = ({
     children,
     heading = 'h1',
-    shadow = true,
+    hasShadow = true,
     className
 }: TextHeadingProps) => {
     const HeadingComponent = heading || 'h1';
 
     return (
         <HeadingComponent
-            className={`${headingRecipe({ shadow })} ${className}`}>
+            className={`${headingRecipe({ hasShadow })} ${className}`}>
             {children}
         </HeadingComponent>
     );

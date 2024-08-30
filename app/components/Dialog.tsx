@@ -37,7 +37,7 @@ const Title = styled(DialogPrimitives.Title, {
         margin: 0,
         fontWeight: 'bold',
         color: 'dark',
-        fontSize: '2xl',
+        fontSize: '4xl',
     }
 });
 const Description = styled(DialogPrimitives.Description, {

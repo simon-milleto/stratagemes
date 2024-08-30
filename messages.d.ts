@@ -28,4 +28,6 @@ export type MessageFromClient = {
 export type RequestData = {
   type: "active" | "inactive",
   roomId: string;
+} | {
+  type: "clean-all",
 }

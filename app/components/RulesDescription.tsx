@@ -4,19 +4,18 @@ import { TextHeading } from "./TextHeading";
 
 const RulesHeading = styled(TextHeading, {
     base: {
-        fontSize: '1.4rem',
+        fontSize: '2xl',
         fontWeight: 'bold',
         color: 'dark',
         marginBottom: '1rem',
-        marginTop: '1rem',
-        textShadow: 'none'
+        marginTop: '1rem'
     }
 });
 
 export default function RulesDescription() {
     return (
         <>
-            <RulesHeading>
+            <RulesHeading hasShadow={false}>
                 Aperçu et but du jeu
             </RulesHeading>
             <p>
@@ -36,7 +35,7 @@ export default function RulesDescription() {
                 l’évolution du plateau de jeu et de vos adversaires.
             </p>
 
-            <RulesHeading>
+            <RulesHeading hasShadow={false}>
                 Déroulement d'une partie
             </RulesHeading>
             <ul>
@@ -52,7 +51,7 @@ export default function RulesDescription() {
                     respecter la règle d’un encerclement d’une pierre par deux autres.</li>
             </ul>
 
-            <RulesHeading>
+            <RulesHeading hasShadow={false}>
                 Tour de jeu
             </RulesHeading>
 
@@ -68,7 +67,7 @@ export default function RulesDescription() {
                 gemmes qu’en début de partie.</li>
             </ul>
 
-            <RulesHeading>
+            <RulesHeading hasShadow={false}>
                 Fin du jeu
             </RulesHeading>
 
